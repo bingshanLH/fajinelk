@@ -13,11 +13,8 @@ public class BasicFileService {
 		return BASIC_FILE_DAO.paginate(pageNumber, pageSize, "select *", "from basic_file order by id asc");
 	}
 
-//	public BasicFile findById(int id) {
-//		return BASIC_FILE_DAO.findById(id);
-//	}
-//
-//	public void deleteById(int id) {
-//		BASIC_FILE_DAO.deleteById(id);
-//	}
+	public BasicFile findById(int id) {
+		return BASIC_FILE_DAO.findById(id);
+	}
+
 }

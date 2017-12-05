@@ -12,10 +12,7 @@ public class BasicFileController extends Controller {
 
 	public void index() {
 		Page<BasicFile> page = basicFileService.paginate(1, 10);
-		render("index.jsp");
+		render("index.html");
 	}
 
-	public static void main(String[] args) {
-		basicFileService.paginate(1, 10);
-	}
 }

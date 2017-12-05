@@ -17,7 +17,7 @@ import javax.sql.DataSource;
  */
 public class JFinalDemoGenerator {
 
-	public static DataSource getDataSource() {
+	private static DataSource getDataSource() {
 		PropKit.use("init.properties");
 		DruidPlugin druidPlugin = DemoConfig.createDruidPlugin();
 		druidPlugin.start();
