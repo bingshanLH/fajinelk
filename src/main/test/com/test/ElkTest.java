@@ -5,6 +5,8 @@ import com.demo.common.model.BasicFile;
 import com.jfinal.plugin.activerecord.Page;
 import org.junit.Test;
 
+import java.util.List;
+
 public class ElkTest extends JFinalModelCase{
 
 	private static BasicFileService basicFileService = new BasicFileService();
@@ -12,6 +14,12 @@ public class ElkTest extends JFinalModelCase{
 	@Test
 	public void TestDB(){
 		Page<BasicFile> page = basicFileService.paginate(1, 10);
-		System.out.println("12");
+
+		List<BasicFile> list=page.getList();
+
+		for (BasicFile b :
+				list) {
+			System.out.println(b.toJson());
+		}
 	}
 }
