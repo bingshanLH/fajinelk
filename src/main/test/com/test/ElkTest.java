@@ -7,12 +7,18 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -170,78 +176,41 @@ public class ElkTest extends JFinalModelCase {
 	}
 
 
-//	/**
-//	 * 查找附近的人
-//	 *
-//	 * @param lat
-//	 * @param lon
-//	 * @param radius
-//	 * @param size
-//	 * @return
-//	 */
-//	public SearchResult searchNearbyMember(Double lat, Double lon, int radius, int size, String gender) {
-//
-//		SearchResult searchResult = new SearchResult();
-//
-//		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(indexName).setTypes(indexType);
-//
-//		//设置分页
-//		searchRequestBuilder.setFrom(0).setSize(size);
-//
-//		//构建坐标查询规则
-//		QueryBuilder queryBuilder = new GeoDistanceRangeQueryBuilder("location")
-//				.point(lat, lon)
-//				.from("0m").to(radius + "m")
-//				.optimizeBbox("memory")
-//				.geoDistance(GeoDistance.PLANE);
-//		searchRequestBuilder.setPostFilter(queryBuilder);
-//
-//		//创建排序规则
-//		GeoDistanceSortBuilder geoDistanceSortBuilder = SortBuilders.geoDistanceSort("location");
-//		geoDistanceSortBuilder.unit(DistanceUnit.METERS);
-//		geoDistanceSortBuilder.order(SortOrder.ASC);
-//		geoDistanceSortBuilder.point(lat, lon);
-//		searchRequestBuilder.addSort(geoDistanceSortBuilder);
-//
-//		//
-//		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-//		if (gender != null && !"".equals(gender.trim())) {
-//			boolQueryBuilder.must(QueryBuilders.matchQuery("gender", gender));
-//		}
-//		searchRequestBuilder.setQuery(boolQueryBuilder);
-//
-//		//开始搜索
-//		SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-//		//一般的搜索引擎中，高亮
-//		SearchHits searchHits = searchResponse.getHits();
-//		SearchHit[] hits = searchHits.getHits();
-//		for (SearchHit hit :
-//				hits) {
-//			BigDecimal geoDis = new BigDecimal((Double) hit.getSortValues()[0]);
-//			//获取高亮中的记录
-//			Map<String, Object> hitMap = hit.getSource();
-//			//向结果中填值
-//			hitMap.put("geo", geoDis.setScale(0, BigDecimal.ROUND_HALF_DOWN));
-//			searchResult.getData().add(hitMap);
-//		}
-//		//耗时
-//		Float useTime = searchResponse.getTookInMillis() / 1000f;
-//		searchResult.setUseTime(useTime);
-//
-//		//单位
-//		searchResult.setDistance("m");
-//
-//		searchResult.setTotal(searchHits.getTotalHits());
-//
-//		return searchResult;
-//	}
+	public void searchNearbyMember(String str,Integer size) {
+
+		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(indexName).setTypes(indexType);
+
+		//设置分页
+		searchRequestBuilder.setFrom(0).setSize(size);
+
+		//
+		QueryBuilder queryBuilder=QueryBuilders.matchQuery("content",str);
+		searchRequestBuilder.setQuery(queryBuilder);
+
+		//开始搜索
+		SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+		//一般的搜索引擎中，高亮
+		SearchHits searchHits = searchResponse.getHits();
+		SearchHit[] hits = searchHits.getHits();
+		for (SearchHit hit :
+				hits) {
+			System.out.println(hit.getSource().get("content"));
+		}
+		//耗时
+		Float useTime = searchResponse.getTookInMillis() / 1000f;
+		System.out.println(useTime);
+		System.out.println(hits.length);
+
+	}
 
 
 	@Test
 	public void TestDB() {
-		ElkTest elk = new ElkTest();
-		elk.createIndex();
-		elk.addDataToIndex();
+
+		searchNearbyMember("保护隐私",2000);
+//		ElkTest elk = new ElkTest();
+//		elk.createIndex();
+//		elk.addDataToIndex();
 //		Page<BasicFile> page = basicFileService.paginate(1, 10);
 //
 //		List<BasicFile> list = page.getList();
