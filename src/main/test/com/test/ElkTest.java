@@ -2,6 +2,7 @@ package com.test;
 
 import com.demo.basicfile.BasicFileService;
 import com.demo.common.model.BasicFile;
+import com.jfinal.kit.PropKit;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -46,7 +47,8 @@ public class ElkTest extends JFinalModelCase {
 			client = TransportClient.builder()
 					.settings(settings)
 					.build()
-					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("39.106.116.178"), 9300));
+					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(PropKit.get("es_host")),
+							Integer.parseInt(PropKit.get("es_port"))));
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -68,7 +70,7 @@ public class ElkTest extends JFinalModelCase {
 					.startObject("creation_time").field("type", "string").endObject()
 					.startObject("pid").field("type", "long").endObject()
 					.startObject("pname").field("type", "string").endObject()
-					.startObject("content").field("type", "string").endObject()
+					.startObject("content").field("type", "string").field("analyzer","ik_smart").endObject()
 					.startObject("remark").field("type", "string").endObject()
 					.startObject("sequence").field("type", "string").endObject()
 					.startObject("sequence_number").field("type", "integer").endObject()
@@ -108,8 +110,6 @@ public class ElkTest extends JFinalModelCase {
 	 * @return
 	 */
 	public Integer addDataToIndex() {
-
-//		Page<BasicFile> page = basicFileService.paginate(1, 10);
 
 		List<BasicFile> list = basicFileService.queryAllList();
 
@@ -176,7 +176,7 @@ public class ElkTest extends JFinalModelCase {
 	}
 
 
-	public void searchNearbyMember(String str,Integer size) {
+	public void searchFaJing(String str,Integer size) {
 
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(indexName).setTypes(indexType);
 
@@ -184,7 +184,8 @@ public class ElkTest extends JFinalModelCase {
 		searchRequestBuilder.setFrom(0).setSize(size);
 
 		//
-		QueryBuilder queryBuilder=QueryBuilders.matchQuery("content",str);
+		QueryBuilder queryBuilder=QueryBuilders.matchQuery("content",str).analyzer("ik");
+//		QueryBuilder queryBuilder=QueryBuilders.multiMatchQuery("content",str).analyzer("ik");
 		searchRequestBuilder.setQuery(queryBuilder);
 
 		//开始搜索
@@ -197,7 +198,7 @@ public class ElkTest extends JFinalModelCase {
 			System.out.println(hit.getSource().get("content"));
 		}
 		//耗时
-		Float useTime = searchResponse.getTookInMillis() / 1000f;
+		Long useTime = searchResponse.getTookInMillis();
 		System.out.println(useTime);
 		System.out.println(hits.length);
 
@@ -207,18 +208,10 @@ public class ElkTest extends JFinalModelCase {
 	@Test
 	public void TestDB() {
 
-		searchNearbyMember("保护隐私",2000);
+		searchFaJing("房屋买卖无效的权力",2000);
 //		ElkTest elk = new ElkTest();
 //		elk.createIndex();
 //		elk.addDataToIndex();
-//		Page<BasicFile> page = basicFileService.paginate(1, 10);
-//
-//		List<BasicFile> list = page.getList();
-//
-//		for (BasicFile b :
-//				list) {
-//			System.out.println(b.toJson());
-//		}
 	}
 
 }
