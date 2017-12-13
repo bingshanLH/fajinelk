@@ -16,6 +16,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -70,7 +71,7 @@ public class ElkTest extends JFinalModelCase {
 					.startObject("creation_time").field("type", "string").endObject()
 					.startObject("pid").field("type", "long").endObject()
 					.startObject("pname").field("type", "string").endObject()
-					.startObject("content").field("type", "string").field("analyzer","ik_smart").endObject()
+					.startObject("content").field("type", "string").field("analyzer", "ik_smart").endObject()
 					.startObject("remark").field("type", "string").endObject()
 					.startObject("sequence").field("type", "string").endObject()
 					.startObject("sequence_number").field("type", "integer").endObject()
@@ -176,17 +177,27 @@ public class ElkTest extends JFinalModelCase {
 	}
 
 
-	public void searchFaJing(String str,Integer size) {
+	public void searchFaJing(String str, Integer pid, Integer size) {
 
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(indexName).setTypes(indexType);
 
 		//设置分页
 		searchRequestBuilder.setFrom(0).setSize(size);
 
-		//
-		QueryBuilder queryBuilder=QueryBuilders.matchQuery("content",str).analyzer("ik");
-//		QueryBuilder queryBuilder=QueryBuilders.multiMatchQuery("content",str).analyzer("ik");
-		searchRequestBuilder.setQuery(queryBuilder);
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+		if (pid != null) {
+			boolQueryBuilder.filter(QueryBuilders.termQuery("pid", pid));
+		}
+
+		//content/sequence/remark
+		QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(str, "content", "sequence", "remark")
+				.analyzer("ik_smart")
+				.type("best_fields").tieBreaker(0.3f);
+//		QueryBuilder queryBuilder=QueryBuilders.matchQuery("content",str).analyzer("ik_smart");
+		boolQueryBuilder.filter(queryBuilder);
+//		searchRequestBuilder.setQuery(queryBuilder);
+		searchRequestBuilder.setQuery(boolQueryBuilder);
+
 
 		//开始搜索
 		SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
@@ -195,7 +206,9 @@ public class ElkTest extends JFinalModelCase {
 		SearchHit[] hits = searchHits.getHits();
 		for (SearchHit hit :
 				hits) {
-			System.out.println(hit.getSource().get("content"));
+			System.out.println(hit.getSource().get("pid"));
+			System.out.println(hit.getSource().get("content").toString() + hit.getSource().get("sequence").toString() + hit.getSource().get("remark").toString());
+			System.out.println();
 		}
 		//耗时
 		Long useTime = searchResponse.getTookInMillis();
@@ -208,7 +221,7 @@ public class ElkTest extends JFinalModelCase {
 	@Test
 	public void TestDB() {
 
-		searchFaJing("房屋买卖无效的权力",2000);
+		searchFaJing("中华人民共和国", 6, 2000);
 //		ElkTest elk = new ElkTest();
 //		elk.createIndex();
 //		elk.addDataToIndex();
